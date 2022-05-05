@@ -14,13 +14,13 @@
 ;        cabe? (< tamanho-atual 5)]
 ;    (if cabe?
 ;      (update hospital departamento conj pessoa)
-;      (throw (ex-info "Filá já está cheia" {:tentando-adicionar pessoa})))))
+;      (throw (ex-info "Fila já está cheia" {:tentando-adicionar pessoa})))))
 
 (defn chega-em
   [hospital departamento pessoa]
   (if (cabe-na-fila? hospital departamento)
     (update hospital departamento conj pessoa)
-    (throw (ex-info "Filá já está cheia" {:tentando-adicionar pessoa}))))
+    (throw (ex-info "Fila já está cheia" {:tentando-adicionar pessoa}))))
 
 
 
@@ -31,7 +31,7 @@
   (if (cabe-na-fila? hospital departamento)
     (do (Thread/sleep 1000)
     (update hospital departamento conj pessoa))
-    (throw (ex-info "Filá já está cheia" {:tentando-adicionar pessoa}))))
+    (throw (ex-info "Fila já está cheia" {:tentando-adicionar pessoa}))))
 
 
 
@@ -45,7 +45,7 @@
     (do                                                     ;(Thread/sleep 1000)
       (println "Dando update na " pessoa)
       (update hospital departamento conj pessoa))
-    (throw (ex-info "Filá já está cheia" {:tentando-adicionar pessoa}))))
+    (throw (ex-info "Fila já está cheia" {:tentando-adicionar pessoa}))))
 
 
 
