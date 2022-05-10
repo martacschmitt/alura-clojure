@@ -56,3 +56,8 @@
     (imprime-relatorio-de-paciente visitas 20)))
 
 (testa-uso-de-pacientes)
+
+
+(fn [v]
+  (reduce #(if (= (peek %1) %2) (conj %1 %2) %1) [] v))
+
