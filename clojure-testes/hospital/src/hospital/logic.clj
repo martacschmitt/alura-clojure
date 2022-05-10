@@ -41,3 +41,6 @@
 ;  [hospital departamento pessoa]
 ;  (if (cabe-na-fila? hospital departamento)
 ;    (update hospital departamento conj pessoa)))
+
+
+
