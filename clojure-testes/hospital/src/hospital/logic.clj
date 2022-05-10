@@ -31,11 +31,11 @@
 ;    (update hospital departamento conj pessoa)
 ;    (throw (ex-info "Não cabe ninguém neste departamento" {:paciente pessoa}))))
 
-(defn chega-em
-  [hospital departamento pessoa]
-  (if (cabe-na-fila? hospital departamento)
-    (update hospital departamento conj pessoa)
-    (throw (IllegalStateException. "Não cabe ninguém neste departamento"))))
+;(defn chega-em
+;  [hospital departamento pessoa]
+;  (if (cabe-na-fila? hospital departamento)
+;    (update hospital departamento conj pessoa)
+;    (throw (IllegalStateException. "Não cabe ninguém neste departamento"))))
 
 ;(defn chega-em
 ;  [hospital departamento pessoa]
@@ -43,4 +43,22 @@
 ;    (update hospital departamento conj pessoa)))
 
 
+; exemplo para extrair com ex-data
+;(defn chega-em
+;  [hospital departamento pessoa]
+;  (if (cabe-na-fila? hospital departamento)
+;    (update hospital departamento conj pessoa)
+;    (throw (ex-info "Não cabe ninguém neste departamento" {:paciente pessoa :tipo :impossivel-colocar-pessoa-na-fila}))))
 
+
+
+(defn- tenta-colocar-na-fila
+  [hospital departamento pessoa]
+  (if (cabe-na-fila? hospital departamento)
+    (update hospital departamento conj pessoa)))
+
+(defn chega-em
+  [hospital departamento pessoa]
+  (if-let [novo-hospital (tenta-colocar-na-fila hospital departamento pessoa)]
+    {:hospital novo-hospital :resultado :sucesso}
+    {:hospital hospital :resultado :impossivel-colocar-pessoa-na-fila}))
