@@ -22,7 +22,32 @@
     (is (cabe-na-fila? {:espera [1 2 3 4]} :espera))
     (is (cabe-na-fila? {:espera [1 2]} :espera)))
 
-  (testing "Que ... quando o departamento não existe"
-    (is (not (cabe-na-fila? {:espera [1 2 3 4]} :raio-x))))
+  (testing "Que não cabe quando o departamento não existe"
+    (is (not (cabe-na-fila? {:espera [1 2 3 4]} :raio-x)))))
+
+
+(deftest chega-em-test
+
+  (testing "Aceita pessoas enquanto cabem pessoas na fila"
+    (is (= {:espera [1 2 3 4 5]} (chega-em {:espera [1 2 3 4]} :espera 5)))
+    (is (= {:espera [1 2 5]} (chega-em {:espera [1 2]} :espera 5))))
+
+  (testing "Não aceita quando não cabe na fila"
+
+    ; verificando que uma exception foi jogada
+    ; problema: qualquer outro erro genérico vai jogar essa exception
+    ;(is (thrown? clojure.lang.ExceptionInfo (chega-em {:espera [1 35 42 64 21]} :espera 76))))
+
+    ;(is (thrown? IllegalStateException (chega-em {:espera [1 35 42 64 21]} :espera 76)))
+
+    ; string de texto solto são super faceis de quebrar
+    ;(is (thrown? clojure.lang.ExceptionInfo "Não cabe ninguém neste departamento" (chega-em {:espera [1 35 42 64 21]} :espera 76)))
+
+    ; outra abordagem, do nil
+    ; mas o perigo do swap
+    ;(is (nil? (chega-em {:espera [1 35 42 64 21]} :espera 76)))
+
+    )
+
   )
 

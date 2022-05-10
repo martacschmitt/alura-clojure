@@ -24,3 +24,20 @@
           departamento
           count
           (< 5)))
+
+;(defn chega-em
+;  [hospital departamento pessoa]
+;  (if (cabe-na-fila? hospital departamento)
+;    (update hospital departamento conj pessoa)
+;    (throw (ex-info "Não cabe ninguém neste departamento" {:paciente pessoa}))))
+
+(defn chega-em
+  [hospital departamento pessoa]
+  (if (cabe-na-fila? hospital departamento)
+    (update hospital departamento conj pessoa)
+    (throw (IllegalStateException. "Não cabe ninguém neste departamento"))))
+
+;(defn chega-em
+;  [hospital departamento pessoa]
+;  (if (cabe-na-fila? hospital departamento)
+;    (update hospital departamento conj pessoa)))
