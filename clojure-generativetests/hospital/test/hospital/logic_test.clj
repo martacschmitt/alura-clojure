@@ -6,7 +6,8 @@
             [clojure.test.check.clojure-test :refer (defspec)]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
-            [schema.core :as s]))
+            [schema.core :as s])
+  (:import (clojure.lang ExceptionInfo)))
 
 (s/set-fn-validation! true)
 
@@ -44,11 +45,18 @@
 (def nome-aleatorio (gen/fmap clojure.string/join (gen/vector gen/char-alphanumeric 5 10)))
 (def fila-nao-cheia-gen (gen/fmap transforma-vetor-em-fila (gen/vector nome-aleatorio 0 4)))
 
-(defspec transfere-tem-que-manter-a-quantidade-de-pessoas 1
-         (prop/for-all [espera fila-nao-cheia-gen
+(defn transfere-ignorando-erro
+  [hospital para]
+  (try
+    (transfere hospital :espera para)
+    (catch clojure.lang.ExceptionInfo e
+      hospital)))
+
+(defspec transfere-tem-que-manter-a-quantidade-de-pessoas 50
+         (prop/for-all [espera (gen/fmap transforma-vetor-em-fila (gen/vector nome-aleatorio 0 50))
                         raio-x fila-nao-cheia-gen
                         ultrassom fila-nao-cheia-gen
-                        vai-para (gen/elements [:raio-x :ultrassom])]
+                        vai-para (gen/vector (gen/elements [:raio-x :ultrassom]) 0 50)]
                        (let [hospital-inicial {:espera espera :raio-x raio-x :ultrassom ultrassom}
-                             hospital-final (transfere hospital-inicial :espera vai-para)]
+                             hospital-final (reduce transfere-ignorando-erro hospital-inicial vai-para)]
                          (= (total-de-pacientes hospital-inicial) (total-de-pacientes hospital-final)))))
