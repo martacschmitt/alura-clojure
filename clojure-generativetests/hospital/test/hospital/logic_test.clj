@@ -45,15 +45,26 @@
 (def nome-aleatorio (gen/fmap clojure.string/join (gen/vector gen/char-alphanumeric 5 10)))
 (def fila-nao-cheia-gen (gen/fmap transforma-vetor-em-fila (gen/vector nome-aleatorio 0 4)))
 
+;(defn transfere-ignorando-erro
+;  [hospital para]
+;  (try
+;    (transfere hospital :espera para)
+;    (catch clojure.lang.ExceptionInfo e
+;      (cond (= :fila-cheia (:type (ex-data e))) hospital
+;            :else (throw e))
+;      ;(println "Falhou"  (ex-data e))
+;      ;hospital
+;      )))
+
 (defn transfere-ignorando-erro
   [hospital para]
   (try
     (transfere hospital :espera para)
-    (catch clojure.lang.ExceptionInfo e
-      hospital)))
+    (catch IllegalStateException e hospital)))
 
 (defspec transfere-tem-que-manter-a-quantidade-de-pessoas 50
-         (prop/for-all [espera (gen/fmap transforma-vetor-em-fila (gen/vector nome-aleatorio 0 50))
+         (prop/for-all [;espera gen/string-alphanumeric
+                        espera (gen/fmap transforma-vetor-em-fila (gen/vector nome-aleatorio 0 50))
                         raio-x fila-nao-cheia-gen
                         ultrassom fila-nao-cheia-gen
                         vai-para (gen/vector (gen/elements [:raio-x :ultrassom]) 0 50)]

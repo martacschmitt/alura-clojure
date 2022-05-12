@@ -13,13 +13,13 @@
   [hospital departamento pessoa]
   (if (cabe-na-fila? hospital departamento)
     (update hospital departamento conj pessoa)
-    (throw (ex-info "Não cabe ninguém neste departamento" {:paciente pessoa}))))
+    (throw (java.lang.IllegalStateException. "Não cabe ninguém neste departamento"))))
 
 (s/defn atende :- h.model/Hospital
         [hospital :- h.model/Hospital departamento :- s/Keyword]
         (update hospital departamento pop))
 
-(s/defn proxima :- h.model/PacienteID
+(s/defn proxima :- (s/maybe h.model/PacienteID)
         "Retorna o próximo paciente da fila"
         [hospital :- h.model/Hospital departamento :- s/Keyword]
         (-> hospital
@@ -37,10 +37,11 @@
         {:pre [(contains? hospital de)
                (contains? hospital para)]
          :post [mesmo-tamanho? hospital % de para]}
-        (let [pessoa (proxima hospital de)]
+        (if-let [pessoa (proxima hospital de)]
           (-> hospital
               (atende de)
-              (chega-em para pessoa))))
+              (chega-em para pessoa))
+          hospital))
 
 (defn total-de-pacientes
   [hospital]
