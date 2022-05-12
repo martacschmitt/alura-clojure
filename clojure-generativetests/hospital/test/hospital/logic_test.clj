@@ -81,12 +81,25 @@
   (gen/fmap
     adiciona-fila-de-espera (gen/tuple (gen/not-empty (g/generator h.model/Hospital)) fila-nao-cheia-gen)))
 
-(def chega-em-gen (gen/tuple (gen/return chega-em) (gen/return :espera) nome-aleatorio))
+(def chega-em-gen
+  (gen/tuple (gen/return chega-em)
+             (gen/return :espera)
+             nome-aleatorio
+             (gen/return 1)))
+
+(defn adiciona-inexistente-ao-departamento
+  [departamento]
+  (keyword (str departamento "-inexistente")))
 
 (defn transfere-gen
   [hospital]
-  (let [departamentos (keys hospital)]
-    (gen/tuple (gen/return transfere) (gen/elements departamentos) (gen/elements departamentos))))
+  (let [departamentos (keys hospital)
+        departamentos-inexistentes (map adiciona-inexistente-ao-departamento departamentos)
+        todos-os-departamentos (concat departamentos departamentos-inexistentes)]
+    (gen/tuple (gen/return transfere)
+               (gen/elements todos-os-departamentos)
+               (gen/elements todos-os-departamentos)
+               (gen/return 0))))
 
 (defn acao-gen
   [hospital]
@@ -96,8 +109,25 @@
   [hospital]
   (gen/not-empty (gen/vector (acao-gen hospital) 1 100)))
 
-(defspec simula-um-dia-do-hospital-nao-perde-pessoas 10
-         (prop/for-all [hospital hospital-gen]
-                       (let [acoes (gen/sample (acoes-gen hospital) 1)]
-                         (println acoes)
-                         (is (= 1 1)))))
+(defn executa-uma-acao
+  [situacao [funcao param1 param2 diferenca-se-sucesso]]
+  (let [hospital (:hospital situacao)
+        diferenca-atual (:diferenca situacao)]
+    (try
+      (let [hospital-novo (funcao hospital param1 param2)]
+        {:hospital hospital-novo
+         :diferenca (+ diferenca-se-sucesso diferenca-atual)})
+      (catch IllegalStateException e
+        situacao)
+      (catch AssertionError e                               ;CUIDADO!!!!
+        situacao))))
+
+(defspec simula-um-dia-do-hospital-acumula-pessoas 50
+         (prop/for-all [hospital-inicial hospital-gen]
+                       (let [acoes (gen/generate (acoes-gen hospital-inicial))
+                             situacao-inicial {:hospital hospital-inicial :diferenca 0}
+                             total-de-pacientes-inicial (total-de-pacientes hospital-inicial)
+                             situacao-final (reduce executa-uma-acao situacao-inicial acoes)
+                             total-de-pacientes-final (total-de-pacientes (:hospital situacao-final))]
+                         ;(println total-de-pacientes-inicial total-de-pacientes-final (:diferenca situacao-final))
+                         (is (= (- total-de-pacientes-final (:diferenca situacao-final)) total-de-pacientes-inicial)))))
