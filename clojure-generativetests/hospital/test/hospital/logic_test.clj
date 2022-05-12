@@ -6,7 +6,8 @@
             [clojure.test.check.clojure-test :refer (defspec)]
             [clojure.test.check.generators :as gen]
             [clojure.test.check.properties :as prop]
-            [schema.core :as s])
+            [schema.core :as s]
+            [schema-generators.generators :as g])
   (:import (clojure.lang ExceptionInfo)))
 
 (s/set-fn-validation! true)
@@ -71,3 +72,32 @@
                        (let [hospital-inicial {:espera espera :raio-x raio-x :ultrassom ultrassom}
                              hospital-final (reduce transfere-ignorando-erro hospital-inicial vai-para)]
                          (= (total-de-pacientes hospital-inicial) (total-de-pacientes hospital-final)))))
+
+(defn adiciona-fila-de-espera
+  [[hospital fila]]
+  (assoc hospital :espera fila))
+
+(def hospital-gen
+  (gen/fmap
+    adiciona-fila-de-espera (gen/tuple (gen/not-empty (g/generator h.model/Hospital)) fila-nao-cheia-gen)))
+
+(def chega-em-gen (gen/tuple (gen/return chega-em) (gen/return :espera) nome-aleatorio))
+
+(defn transfere-gen
+  [hospital]
+  (let [departamentos (keys hospital)]
+    (gen/tuple (gen/return transfere) (gen/elements departamentos) (gen/elements departamentos))))
+
+(defn acao-gen
+  [hospital]
+  (gen/one-of [chega-em-gen (transfere-gen hospital)]))
+
+(defn acoes-gen
+  [hospital]
+  (gen/not-empty (gen/vector (acao-gen hospital) 1 100)))
+
+(defspec simula-um-dia-do-hospital-nao-perde-pessoas 10
+         (prop/for-all [hospital hospital-gen]
+                       (let [acoes (gen/sample (acoes-gen hospital) 1)]
+                         (println acoes)
+                         (is (= 1 1)))))
