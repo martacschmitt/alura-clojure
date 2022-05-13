@@ -68,3 +68,157 @@
 ; https://4clojure.oxal.org/#/problem/11
 
 (= {:a 1, :b 2, :c 3} (conj {:a 1} [:b 2] [:c 3]))
+
+
+; 12 - SEQUENCES
+; https://4clojure.oxal.org/#/problem/12
+
+(= 3 (first '(3 2 1)))
+(= 3 (second [2 3 4]))
+(= 3 (last (list 1 2 3)))
+
+
+; 13 - REST
+; https://4clojure.oxal.org/#/problem/13
+
+(= [20 30 40] (rest [10 20 30 40]))
+
+
+; 14 - FUNCTIONS
+; https://4clojure.oxal.org/#/problem/14
+
+(= 8 ((fn add-five [x] (+ x 5)) 3))
+(= 8 ((fn [x] (+ x 5)) 3))
+(= 8 (#(+ % 5) 3))
+(= 8 ((partial + 5) 3))
+
+
+; 15 - DOUBLE DOWN
+; https://4clojure.oxal.org/#/problem/15
+
+(= (* 2 2) 4)
+(= (* 2 3) 6)
+(= (* 2 11) 22)
+(= (* 2 7) 14)
+
+
+; 16 - HELLO WORLD
+; https://4clojure.oxal.org/#/problem/16
+
+((fn hello-world
+  [name]
+  (apply str (concat "Hello, " name "!"))) "Dave")
+
+(= ((fn hello-world [name] (apply str (concat "Hello, " name "!"))) "Dave") "Hello, Dave!")
+(= ((fn hello-world [name] (apply str (concat "Hello, " name "!"))) "Jenn") "Hello, Jenn!")
+(= ((fn hello-world [name] (apply str (concat "Hello, " name "!"))) "Rhea") "Hello, Rhea!")
+
+
+; 17 - MAP
+; https://4clojure.oxal.org/#/problem/17
+
+(= '(6 7 8) (map #(+ % 5) '(1 2 3)))
+
+
+; 18 - FILTER
+; https://4clojure.oxal.org/#/problem/18
+
+(= '(6 7) (filter #(> % 5) '(3 4 5 6 7)))
+
+
+; 19 - LAST ELEMENT
+; https://4clojure.oxal.org/#/problem/19
+
+(= (last [1 2 3 4 5]) 5)
+(= (last '(5 4 3)) 3)
+(= (last ["b" "c" "d"]) "d")
+
+
+; 20 - PENULTIMATE ELEMENT
+; https://4clojure.oxal.org/#/problem/20
+
+((fn penultimate-element
+  [elements]
+  (second (reverse elements))) [1 2 3 4 5])
+
+(= ((fn penultimate-element [elements] (second (reverse elements))) (list 1 2 3 4 5)) 4)
+(= ((fn penultimate-element [elements] (second (reverse elements))) ["a" "b" "c"]) "b")
+(= ((fn penultimate-element [elements] (second (reverse elements))) [[1 2] [3 4]]) [1 2])
+
+
+; 21 - NTH ELEMENT
+; https://4clojure.oxal.org/#/problem/21
+
+(= (nth '(4 5 6 7) 2) 6)
+(= (nth [:a :b :c] 0) :a)
+(= (nth [1 2 3 4] 1) 2)
+(= (nth '([1 2] [3 4] [5 6]) 2) [5 6])
+
+
+; 22 - COUNT A SEQUENCE
+; https://4clojure.oxal.org/#/problem/22
+
+(= (count '(1 2 3 3 1)) 5)
+(= (count "Hello World") 11)
+(= (count [[1 2] [3 4] [5 6]]) 3)
+(= (count '(13)) 1)
+(= (count '(:a :b :c)) 3)
+
+
+; 23 - REVERSE A SEQUENCE
+; https://4clojure.oxal.org/#/problem/23
+
+(= (reverse [1 2 3 4 5]) [5 4 3 2 1])
+(= (reverse (sorted-set 5 7 2 7)) '(7 5 2))
+(= (reverse [[1 2][3 4][5 6]]) [[5 6][3 4][1 2]])
+
+
+; 24 - SUM IT ALL UP
+; https://4clojure.oxal.org/#/problem/24
+
+(= (reduce + [1 2 3]) 6)
+(= (reduce + (list 0 -2 5 5)) 8)
+(= (reduce + #{4 2 1}) 7)
+(= (reduce + '(0 0 -1)) -1)
+(= (reduce + '(1 10 3)) 14)
+
+
+; 25 - FIND THE ODD NUMBERS
+; https://4clojure.oxal.org/#/problem/25
+
+(= (filter odd? #{1 2 3 4 5}) '(1 3 5))
+(= (filter odd? [4 2 1 6]) '(1))
+(= (filter odd? [2 2 4 6]) '())
+(= (filter odd? [1 1 1 3]) '(1 1 1 3))
+
+
+; 26 - FIBONACCI SEQUENCE
+; https://4clojure.oxal.org/#/problem/26
+
+; 1 1 2 3 5 8 ...
+
+((fn [x]
+   (loop [iter 1 fib [1]]
+     (if (= iter x)
+       fib
+       (recur (inc iter)
+              (reduce #(conj %2 (+ (if (< (count %2) 2) 0 (second (reverse %2))) (last %2))) [[] fib]))))) 10)
+
+(= ((fn [x]
+      (loop [iter 1 fib [1]]
+        (if (= iter x)
+          fib
+          (recur (inc iter)
+                 (reduce #(conj %2 (+ (if (< (count %2) 2) 0 (second (reverse %2))) (last %2))) [[] fib]))))) 3) '(1 1 2))
+(= ((fn [x]
+      (loop [iter 1 fib [1]]
+        (if (= iter x)
+          fib
+          (recur (inc iter)
+                 (reduce #(conj %2 (+ (if (< (count %2) 2) 0 (second (reverse %2))) (last %2))) [[] fib]))))) 6) '(1 1 2 3 5 8))
+(= ((fn [x]
+      (loop [iter 1 fib [1]]
+        (if (= iter x)
+          fib
+          (recur (inc iter)
+                 (reduce #(conj %2 (+ (if (< (count %2) 2) 0 (second (reverse %2))) (last %2))) [[] fib]))))) 8) '(1 1 2 3 5 8 13 21))
