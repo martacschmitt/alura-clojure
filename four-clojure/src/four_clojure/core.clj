@@ -237,3 +237,56 @@
 (true? (#(= (apply str %) (apply str (reverse %))) [:foo :bar :foo]))
 (true? (#(= (apply str %) (apply str (reverse %))) '(1 1 3 3 1 1)))
 (false? (#(= (apply str %) (apply str (reverse %))) '(:a :b :c)))
+
+
+; 28 - FLATTEN A SEQUENCE
+; https://4clojure.oxal.org/#/problem/28
+
+(= (flatten '((1 2) 3 [4 [5 6]])) '(1 2 3 4 5 6))
+(= (flatten ["a" ["b"] "c"]) '("a" "b" "c"))
+(= (flatten '((((:a))))) '(:a))
+
+
+; 29 - GET THE CAPS
+; https://4clojure.oxal.org/#/problem/29
+
+(fn [s]
+  (apply str (filter #(Character/isUpperCase %) s)))
+
+(= ((fn [s] (apply str (filter #(Character/isUpperCase %) s))) "HeLlO, WoRlD!") "HLOWRD")
+(empty? ((fn [s] (apply str (filter #(Character/isUpperCase %) s))) "nothing"))
+(= ((fn [s] (apply str (filter #(Character/isUpperCase %) s))) "$#A(*&987Zf") "AZ")
+
+
+; 30 - COMPRESS A SEQUENCE
+; https://4clojure.oxal.org/#/problem/30
+
+#(map first (partition-by identity %))
+
+; outra alternativa
+(dedupe [1 1 2 3 3 2 2 3])
+
+(= (apply str (#(map first (partition-by identity %)) "Leeeeeerrroyyy")) "Leroy")
+(= (#(map first (partition-by identity %)) [1 1 2 3 3 2 2 3]) '(1 2 3 2 3))
+(= (#(map first (partition-by identity %)) [[1 2] [1 2] [3 4] [1 2]]) '([1 2] [3 4] [1 2]))
+
+
+; 31 - PACK A SEQUENCE
+; https://4clojure.oxal.org/#/problem/31
+
+(partition-by identity [1 1 2 1 1 1 3 3])
+
+(= (partition-by identity [1 1 2 1 1 1 3 3]) '((1 1) (2) (1 1 1) (3 3)))
+(= (partition-by identity [:a :a :b :b :c]) '((:a :a) (:b :b) (:c)))
+(= (partition-by identity [[1 2] [1 2] [3 4]]) '(([1 2] [1 2]) ([3 4])))
+
+
+; 32 - DUPLICATE A SEQUENCE
+; https://4clojure.oxal.org/#/problem/32
+
+(fn [s] (apply concat (map #(apply concat (repeat 2 %)) (partition-by identity s))))
+
+(= ((fn [s] (apply concat (map #(apply concat (repeat 2 %)) (partition-by identity s)))) [1 2 3]) '(1 1 2 2 3 3))
+(= ((fn [s] (apply concat (map #(apply concat (repeat 2 %)) (partition-by identity s)))) [:a :a :b :b]) '(:a :a :a :a :b :b :b :b))
+(= ((fn [s] (apply concat (map #(apply concat (repeat 2 %)) (partition-by identity s)))) [[1 2] [3 4]]) '([1 2] [1 2] [3 4] [3 4]))
+(= ((fn [s] (apply concat (map #(apply concat (repeat 2 %)) (partition-by identity s)))) [44 33]) [44 44 33 33])
