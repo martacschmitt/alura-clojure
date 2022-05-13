@@ -222,3 +222,18 @@
           fib
           (recur (inc iter)
                  (reduce #(conj %2 (+ (if (< (count %2) 2) 0 (second (reverse %2))) (last %2))) [[] fib]))))) 8) '(1 1 2 3 5 8 13 21))
+
+
+
+; 27 - PALINDROME DETECTOR
+; https://4clojure.oxal.org/#/problem/27
+
+((fn [x]
+  (= (apply str x) (apply str (reverse x)))) '(:a :b :c))
+
+
+(false? (#(= (apply str %) (apply str (reverse %))) '(1 2 3 4 5)))
+(true? (#(= (apply str %) (apply str (reverse %))) "racecar"))
+(true? (#(= (apply str %) (apply str (reverse %))) [:foo :bar :foo]))
+(true? (#(= (apply str %) (apply str (reverse %))) '(1 1 3 3 1 1)))
+(false? (#(= (apply str %) (apply str (reverse %))) '(:a :b :c)))
