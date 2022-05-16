@@ -42,14 +42,20 @@
 (defn cria-schema [conn]
   (d/transact conn schema))
 
+(defn todos-os-produtos [db]
+  (d/q '[:find ?nome, ?preco, ?slug
+         :keys produto/nome, produto/preco, produto/slug
+         :where [?entidade :produto/nome ?nome]
+                [?entidade :produto/preco ?preco]
+                [?entidade :produto/slug ?slug]] db))
 
 ;(defn todos-os-produtos [db]
 ;  (d/q '[:find ?entidade (pull ?entidade [:produto/nome :produto/preco :produto/slug])
 ;         :where [?entidade :produto/nome]] db))
 
-(defn todos-os-produtos [db]
-  (d/q '[:find ?entidade                                    ;(pull ?entidade [*])
-         :where [?entidade :produto/nome]] db))
+;(defn todos-os-produtos [db]
+;  (d/q '[:find ?entidade (pull ?entidade [*])
+;         :where [?entidade :produto/nome]] db))
 
 (defn todos-os-produtos-por-slug
   [db slug]
