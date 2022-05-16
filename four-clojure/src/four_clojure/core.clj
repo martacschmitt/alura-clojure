@@ -292,3 +292,45 @@
 (= ((fn [s] (apply concat (map #(apply concat (repeat 2 %)) (partition-by identity s)))) [44 33]) [44 44 33 33])
 
 
+; 33 - REPLICATE A SEQUENCE
+; https://4clojure.oxal.org/#/problem/33
+
+(fn [s times] (apply concat (map #(apply concat (repeat times %)) (partition-by identity s))))
+
+(= ((fn [s times] (apply concat (map #(apply concat (repeat times %)) (partition-by identity s)))) [1 2 3] 2) '(1 1 2 2 3 3))
+(= ((fn [s times] (apply concat (map #(apply concat (repeat times %)) (partition-by identity s)))) [:a :b] 4) '(:a :a :a :a :b :b :b :b))
+(= ((fn [s times] (apply concat (map #(apply concat (repeat times %)) (partition-by identity s)))) [4 5 6] 1) '(4 5 6))
+(= ((fn [s times] (apply concat (map #(apply concat (repeat times %)) (partition-by identity s)))) [[1 2] [3 4]] 2) '([1 2] [1 2] [3 4] [3 4]))
+(= ((fn [s times] (apply concat (map #(apply concat (repeat times %)) (partition-by identity s)))) [44 33] 2) [44 44 33 33])
+
+
+; 34 - IMPLEMENT RANGE
+; https://4clojure.oxal.org/#/problem/34
+
+(= (range 1 4) '(1 2 3))
+(= (range -2 2) '(-2 -1 0 1))
+(= (range 5 8) '(5 6 7))
+
+
+; 35 - LOCAL BINDINGS
+; https://4clojure.oxal.org/#/problem/35
+
+(= 7 (let [x 5] (+ 2 x)))
+(= 7 (let [x 3, y 10] (- y x)))
+(= 7 (let [x 21] (let [y 3] (/ x y))))
+
+
+; 36 - LET IT BE
+; https://4clojure.oxal.org/#/problem/36
+
+(let [z 1, y 3, x 7])
+
+(= 10 (let [z 1, y 3, x 7] (+ x y)))
+(= 4 (let [z 1, y 3, x 7] (+ y z)))
+(= 1 (let [z 1, y 3, x 7] z))
+
+
+; 37 - REGULAR EXPRESSIONS
+; https://4clojure.oxal.org/#/problem/37
+
+(= "ABC" (apply str (re-seq #"[A-Z]+" "bA1B3Ce ")))
