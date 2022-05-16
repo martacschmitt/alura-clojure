@@ -43,8 +43,12 @@
   (d/transact conn schema))
 
 
+;(defn todos-os-produtos [db]
+;  (d/q '[:find ?entidade (pull ?entidade [:produto/nome :produto/preco :produto/slug])
+;         :where [?entidade :produto/nome]] db))
+
 (defn todos-os-produtos [db]
-  (d/q '[:find ?entidade
+  (d/q '[:find ?entidade                                    ;(pull ?entidade [*])
          :where [?entidade :produto/nome]] db))
 
 (defn todos-os-produtos-por-slug
@@ -58,6 +62,7 @@
          :where [_ :produto/slug ?slug]] db))
 
 (defn todos-os-produtos-por-preco [db]
-  (d/q '[:find ?nome ?preco
+  (d/q '[:find ?nome, ?preco
+         :keys produto/nome, produto/preco
          :where [?id :produto/preco ?preco]
                 [?id :produto/nome ?nome]] db))
