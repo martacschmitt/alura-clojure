@@ -41,3 +41,8 @@
 
 (defn cria-schema [conn]
   (d/transact conn schema))
+
+
+(defn todos-os-produtos [db]
+  (d/q '[:find ?entidade
+         :where [?entidade :produto/nome]] db))
