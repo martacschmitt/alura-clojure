@@ -37,25 +37,21 @@
              {:db/ident       :produto/preco
               :db/valueType   :db.type/bigdec
               :db/cardinality :db.cardinality/one
-              :db/doc         "O preço de um produto com precisão monetária"}])
+              :db/doc         "O preço de um produto com precisão monetária"}
+             {:db/ident       :produto/palavra-chave
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/many}])
 
 (defn cria-schema [conn]
   (d/transact conn schema))
 
+;(defn todos-os-produtos [db]
+;  (d/q '[:find (pull ?entidade [:produto/nome :produto/preco :produto/slug])
+;         :where [?entidade :produto/nome]] db))
+
 (defn todos-os-produtos [db]
-  (d/q '[:find ?nome, ?preco, ?slug
-         :keys produto/nome, produto/preco, produto/slug
-         :where [?entidade :produto/nome ?nome]
-                [?entidade :produto/preco ?preco]
-                [?entidade :produto/slug ?slug]] db))
-
-;(defn todos-os-produtos [db]
-;  (d/q '[:find ?entidade (pull ?entidade [:produto/nome :produto/preco :produto/slug])
-;         :where [?entidade :produto/nome]] db))
-
-;(defn todos-os-produtos [db]
-;  (d/q '[:find ?entidade (pull ?entidade [*])
-;         :where [?entidade :produto/nome]] db))
+  (d/q '[:find (pull ?entidade [*])
+         :where [?entidade :produto/nome]] db))
 
 (defn todos-os-produtos-por-slug
   [db slug]
@@ -67,8 +63,18 @@
   (d/q '[:find ?slug
          :where [_ :produto/slug ?slug]] db))
 
-(defn todos-os-produtos-por-preco [db]
+(defn todos-os-produtos-por-preco [db preco-minimo-requisitado]
   (d/q '[:find ?nome, ?preco
+         :in $, ?preco-minimo
          :keys produto/nome, produto/preco
          :where [?id :produto/preco ?preco]
-                [?id :produto/nome ?nome]] db))
+         [(> ?preco ?preco-minimo)]
+         [?id :produto/nome ?nome]] db, preco-minimo-requisitado))
+
+
+(defn todos-os-produtos-por-palavra-chave
+  [db palavra-chave-buscada]
+  (d/q '[:find (pull ?produto [*])
+         :in $ ?palavra-chave
+         :where [?produto :produto/palavra-chave ?palavra-chave]]
+    db palavra-chave-buscada))

@@ -334,3 +334,33 @@
 ; https://4clojure.oxal.org/#/problem/37
 
 (= "ABC" (apply str (re-seq #"[A-Z]+" "bA1B3Ce ")))
+
+
+; 38 - MAXIMUM VALUE
+; https://4clojure.oxal.org/#/problem/38
+
+(= (max 1 8 3 4) 8)
+(= (max 30 20) 30)
+(= (max 45 67 11) 67)
+
+
+; 39 - INTERLEAVE TWO SEQS
+; https://4clojure.oxal.org/#/problem/39
+
+(= (interleave [1 2 3] [:a :b :c]) '(1 :a 2 :b 3 :c))
+(= (interleave [1 2] [3 4 5 6]) '(1 3 2 4))
+(= (interleave [1 2 3 4] [5]) [1 5])
+(= (interleave [30 20] [25 15]) [30 25 20 15])
+
+
+; 40 - INTERPOSE
+; https://4clojure.oxal.org/#/problem/40
+
+(= (interpose 0 [1 2 3]) [1 0 2 0 3])
+(= (apply str (interpose ", " ["one" "two" "three"])) "one, two, three")
+(= (interpose :z [:a :b :c :d]) [:a :z :b :z :c :z :d])
+
+
+; 41 - DROP EVERY NTH ITEM
+; https://4clojure.oxal.org/#/problem/41
+
