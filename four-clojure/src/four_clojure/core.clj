@@ -364,3 +364,12 @@
 ; 41 - DROP EVERY NTH ITEM
 ; https://4clojure.oxal.org/#/problem/41
 
+(fn [arr x] (keep-indexed #(if (not (= (mod (+ %1 1) x) 0)) %2) arr))
+
+(= ((fn [arr x] (keep-indexed #(if (not (= (mod (+ %1 1) x) 0)) %2) arr)) [1 2 3 4 5 6 7 8] 3) [1 2 4 5 7 8])
+(= ((fn [arr x] (keep-indexed #(if (not (= (mod (+ %1 1) x) 0)) %2) arr)) [:a :b :c :d :e :f] 2) [:a :c :e])
+(= ((fn [arr x] (keep-indexed #(if (not (= (mod (+ %1 1) x) 0)) %2) arr)) [1 2 3 4 5 6] 4) [1 2 3 5 6])
+
+
+; 42 - FACTORIAL FUN
+; https://4clojure.oxal.org/#/problem/42
