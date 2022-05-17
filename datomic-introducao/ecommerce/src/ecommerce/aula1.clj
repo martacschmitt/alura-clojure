@@ -8,24 +8,25 @@
 
 (db/cria-schema conn)
 
-(let [computador (model/novo-produto "Computador Novo" "/computador_novo" 2500.10M)]
-  (d/transact conn [computador]))
+(let [computador (model/novo-produto (model/uuid) "Computador Novo" "/computador-novo" 2500.10M)
+      celular (model/novo-produto (model/uuid) "Celular Caro" "/celular" 8888.88M)
+      calculadora {:produto/nome "Calculadora com 4 operações"}
+      celular-barato (model/novo-produto (model/uuid) "Celular Barato" "/celular-barato" 0.1M)]
+  (pprint @(d/transact conn [computador, celular, calculadora, celular-barato])))
 
-; o banco no instante que executou a linha
-(def db (d/db conn))
+(def produtos (db/todos-os-produtos (d/db conn)))
+(def primeiro-dbid (-> produtos
+                             ffirst
+                             :db/id))
+(println "O id do primeiro produto é" primeiro-dbid)
+(pprint (db/um-produto-por-dbid (d/db conn) primeiro-dbid))
 
-(d/q '[:find ?entidade
-       :where [?entidade :produto/nome]] db)
+(def primeiro-produto-id (-> produtos
+                               ffirst
+                               :produto/id))
+(println "O id do primeiro produto é" primeiro-produto-id)
+(pprint (db/um-produto (d/db conn) primeiro-produto-id))
 
-
-(let [celular (model/novo-produto "Celular Caro" "/celular" 8888.88M)]
-  (d/transact conn [celular]))
-
-; novo snapshot do banco
-(def db (d/db conn))
-
-(d/q '[:find ?entidade
-       :where [?entidade :produto/nome]] db)
 
 (db/apaga-banco)
 

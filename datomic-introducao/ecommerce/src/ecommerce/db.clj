@@ -40,7 +40,11 @@
               :db/doc         "O preço de um produto com precisão monetária"}
              {:db/ident       :produto/palavra-chave
               :db/valueType   :db.type/string
-              :db/cardinality :db.cardinality/many}])
+              :db/cardinality :db.cardinality/many}
+             {:db/ident       :produto/id
+              :db/valueType   :db.type/uuid
+              :db/cardinality :db.cardinality/one
+              :db/unique      :db.unique/identity}])
 
 (defn cria-schema [conn]
   (d/transact conn schema))
@@ -77,4 +81,11 @@
   (d/q '[:find (pull ?produto [*])
          :in $ ?palavra-chave
          :where [?produto :produto/palavra-chave ?palavra-chave]]
-    db palavra-chave-buscada))
+       db palavra-chave-buscada))
+
+
+(defn um-produto-por-dbid [db db-id]
+  (d/pull db '[*] db-id))
+
+(defn um-produto [db produto-id]
+  (d/pull db '[*] [:produto/id produto-id]))
