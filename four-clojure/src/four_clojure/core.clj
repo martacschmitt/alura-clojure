@@ -373,3 +373,15 @@
 
 ; 42 - FACTORIAL FUN
 ; https://4clojure.oxal.org/#/problem/42
+
+(fn [n] (loop [c n fat 1] (if (zero? c) fat (recur (dec c) (* fat c)))))
+
+(= ((fn [n] (loop [c n fat 1] (if (zero? c) fat (recur (dec c) (* fat c))))) 1) 1)
+(= ((fn [n] (loop [c n fat 1] (if (zero? c) fat (recur (dec c) (* fat c))))) 3) 6)
+(= ((fn [n] (loop [c n fat 1] (if (zero? c) fat (recur (dec c) (* fat c))))) 5) 120)
+(= ((fn [n] (loop [c n fat 1] (if (zero? c) fat (recur (dec c) (* fat c))))) 8) 40320)
+
+
+; 43 - REVERSE INTERLEAVE
+; https://4clojure.oxal.org/#/problem/43
+
