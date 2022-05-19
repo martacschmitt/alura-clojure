@@ -4,9 +4,9 @@
             [ecommerce.db :as db]
             [ecommerce.model :as model]))
 
-(def conn (db/abre-conexao))
+(def conn (db/abre-conexao!))
 
-(db/cria-schema conn)
+(db/cria-schema! conn)
 
 (let [computador (model/novo-produto (model/uuid) "Computador Novo" "/computador-novo" 2500.10M)
       celular (model/novo-produto (model/uuid) "Celular Caro" "/celular" 8888.88M)
@@ -28,6 +28,6 @@
 (pprint (db/um-produto (d/db conn) primeiro-produto-id))
 
 
-(db/apaga-banco)
+(db/apaga-banco!)
 
 
