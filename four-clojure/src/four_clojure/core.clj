@@ -390,3 +390,77 @@
 (= ((fn [arr n] (partition (/ (count arr) n) (apply interleave (partition n arr)))) [1 2 3 4 5 6] 2) '((1 3 5) (2 4 6)))
 (= ((fn [arr n] (partition (/ (count arr) n) (apply interleave (partition n arr)))) (range 9) 3) '((0 3 6) (1 4 7) (2 5 8)))
 (= ((fn [arr n] (partition (/ (count arr) n) (apply interleave (partition n arr)))) (range 10) 5) '((0 5) (1 6) (2 7) (3 8) (4 9)))
+
+
+; 44 - ROTATE SEQUENCE
+; https://4clojure.oxal.org/#/problem/44
+
+((fn [n arr]
+   (loop [c (if (pos? n)
+              n
+              (+ (- n) 1))
+          ret arr]
+     (if (zero? c)
+       ret
+       (recur (dec c)
+              (concat (rest ret) (first (partition-by identity ret)))))))
+ 2 [1 2 3 4 5])
+
+(= ((fn [n arr] (loop [c (if (pos? n) n (+ (- n) 1)) ret arr] (if (zero? c) ret (recur (dec c) (concat (rest ret) (first (partition-by identity ret))))))) 2 [1 2 3 4 5]) '(3 4 5 1 2))
+(= ((fn [n arr] (loop [c (if (pos? n) n (+ (- n) 1)) ret arr] (if (zero? c) ret (recur (dec c) (concat (rest ret) (first (partition-by identity ret))))))) -2 [1 2 3 4 5]) '(4 5 1 2 3))
+(= ((fn [n arr] (loop [c (if (pos? n) n (+ (- n) 1)) ret arr] (if (zero? c) ret (recur (dec c) (concat (rest ret) (first (partition-by identity ret))))))) 6 [1 2 3 4 5]) '(2 3 4 5 1))
+(= ((fn [n arr] (loop [c (if (pos? n) n (+ (- n) 1)) ret arr] (if (zero? c) ret (recur (dec c) (concat (rest ret) (first (partition-by identity ret))))))) 1 '(:a :b :c)) '(:b :c :a))
+(= ((fn [n arr] (loop [c (if (pos? n) n (+ (- n) 1)) ret arr] (if (zero? c) ret (recur (dec c) (concat (rest ret) (first (partition-by identity ret))))))) -4 '(:a :b :c)) '(:c :a :b))
+
+
+; 45 - INTRO TO ITERATE
+; https://4clojure.oxal.org/#/problem/45
+
+(= '(1 4 7 10 13) (take 5 (iterate #(+ 3 %) 1)))
+
+
+; 46 - FLIPPING OUT
+; https://4clojure.oxal.org/#/problem/46
+
+(((fn [func]
+    (fn [p1 p2]
+      (func p2 p1))) nth) 2 [1 2 3 4 5])
+
+(= 3 (((fn [func] (fn [p1 p2] (func p2 p1))) nth) 2 [1 2 3 4 5]))
+(= true (((fn [func] (fn [p1 p2] (func p2 p1))) >) 7 8))
+(= 4 (((fn [func] (fn [p1 p2] (func p2 p1))) quot) 2 8))
+(= [1 2 3] (((fn [func] (fn [p1 p2] (func p2 p1))) take) [1 2 3 4 5] 3))
+
+
+; 47 - CONTAIN YOURSELF
+; https://4clojure.oxal.org/#/problem/47
+
+(contains? #{4 5 6} 4)
+(contains? [1 1 1 1 1] 4)
+(contains? {4 :a 2 :b} 4)
+(not (contains? [1 2 4] 4))
+
+
+; 48 - INTRO TO SOME
+; https://4clojure.oxal.org/#/problem/48
+
+(= 6 (some #{2 7 6} [5 6 7 8]))
+(= 6 (some #(when (even? %) %) [5 6 7 8]))
+
+
+; 49 - SPLIT A SEQUENCE
+; https://4clojure.oxal.org/#/problem/49
+
+(= (split-at 3 [1 2 3 4 5 6]) [[1 2 3] [4 5 6]])
+(= (split-at 1 [:a :b :c :d]) [[:a] [:b :c :d]])
+(= (split-at 2 [[1 2] [3 4] [5 6]]) [[[1 2] [3 4]] [[5 6]]])
+
+
+; 50 SPLIT BY TYPE
+; https://4clojure.oxal.org/#/problem/50
+
+#(vals (group-by type %))
+
+(= (set (#(vals (group-by type %)) [1 :a 2 :b 3 :c])) #{[1 2 3] [:a :b :c]})
+(= (set (#(vals (group-by type %)) [:a "foo"  "bar" :b])) #{[:a :b] ["foo" "bar"]})
+(= (set (#(vals (group-by type %)) [[1 2] :a [3 4] 5 6 :b])) #{[[1 2] [3 4]] [:a :b] [5 6]})
