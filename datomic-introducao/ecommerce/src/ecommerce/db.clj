@@ -55,7 +55,11 @@
              {:db/ident       :categoria/id
               :db/valueType   :db.type/uuid
               :db/cardinality :db.cardinality/one
-              :db/unique      :db.unique/identity}])
+              :db/unique      :db.unique/identity}
+
+             {:db/ident       :tx-data/ip
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/one}])
 
 (defn cria-schema! [conn]
   (d/transact conn schema))
@@ -120,8 +124,11 @@
 
 
 (defn adiciona-produtos!
-  [conn produtos]
-  (d/transact conn produtos))
+  ([conn produtos]
+   (d/transact conn produtos))
+  ([conn produtos ip]
+   (let [db-add-ipp [:db/add "datomic.tx" :tx-data/ip ip]]
+     (d/transact conn (conj produtos db-add-ipp)))))
 
 (defn adiciona-categorias!
   [conn categorias]
@@ -131,8 +138,8 @@
   (d/q '[:find ?nome-do-produto ?nome-da-categoria
          :keys produto categoria
          :where [?produto :produto/nome ?nome-do-produto]
-                [?produto :produto/categoria ?categoria]
-                [?categoria :categoria/nome ?nome-da-categoria]] db))
+         [?produto :produto/categoria ?categoria]
+         [?categoria :categoria/nome ?nome-da-categoria]] db))
 
 ; exemplo com forward navigation
 (defn todos-os-produtos-da-categoria
@@ -140,7 +147,7 @@
   (d/q '[:find (pull ?produto [:produto/nome :produto/slug {:produto/categoria [:categoria/nome]}])
          :in $ ?nome
          :where [?categoria :categoria/nome ?nome]
-                [?produto :produto/categoria ?categoria]] db nome-da-categoria))
+         [?produto :produto/categoria ?categoria]] db nome-da-categoria))
 
 ; exemplo com backward navigation
 (defn todos-os-produtos-da-categoria
@@ -160,5 +167,36 @@
          :keys categoria minimo maximo quantidade preco-total
          :with ?produto
          :where [?produto :produto/preco ?preco]
-                [?produto :produto/categoria ?categoria]
-                [?categoria :categoria/nome ?nome]] db))
+         [?produto :produto/categoria ?categoria]
+         [?categoria :categoria/nome ?nome]] db))
+
+; variação que faz duas queries soltas
+;(defn todos-os-produtos-mais-caros [db]
+;  (let [preco-mais-alto (ffirst (d/q '[:find (max ?preco)
+;                                       :where [_ :produto/preco ?preco]]
+;                                     db))]
+;    (d/q '[:find (pull ?produto [*])
+;           :in $ ?preco
+;           :where [?produto :produto/preco ?preco]] db preco-mais-alto)))
+
+; queremos fazer as duas queries de uma vez só
+(defn todos-os-produtos-mais-caros [db]
+  (d/q '[:find (pull ?produto [*])
+         :where [(q '[:find (max ?preco)
+                      :where [_ :produto/preco ?preco]]
+                    $) [[?preco]]]
+         [?produto :produto/preco ?preco]] db))
+
+(defn todos-os-produtos-mais-baratos [db]
+  (d/q '[:find (pull ?produto [*])
+         :where [(q '[:find (min ?preco)
+                      :where [_ :produto/preco ?preco]]
+                    $) [[?preco]]]
+         [?produto :produto/preco ?preco]] db))
+
+(defn todos-os-produtos-do-ip [db ip]
+  (d/q '[:find (pull ?produto [*])
+         :in $ ?ip-buscado
+         :where [?transacao :tx-data/ip ?ip-buscado]
+                [?produto :produto/id _ ?transacao]]
+       db ip))

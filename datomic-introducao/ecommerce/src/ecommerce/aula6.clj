@@ -1,4 +1,4 @@
-(ns ecommerce.aula5
+(ns ecommerce.aula6
   (:use [clojure.pprint])
   (:require [datomic.api :as d]
             [ecommerce.db :as db]
@@ -22,7 +22,7 @@
 (def celular-barato (model/novo-produto (model/uuid) "Celular Barato" "/celular-barato" 0.1M))
 (def xadrez (model/novo-produto (model/uuid) "Tabuleiro de xadrez" "/tabuleiro-de-xadrez" 30M))
 
-(pprint @(db/adiciona-produtos! conn [computador, celular, calculadora, celular-barato, xadrez]))
+(pprint @(db/adiciona-produtos! conn [computador, celular, calculadora, celular-barato, xadrez] "200.216.222.125"))
 
 (db/atribui-categorias! conn [computador, celular, celular-barato] eletronicos)
 
@@ -37,7 +37,7 @@
                                        :produto/preco     30M
                                        :produto/id        (model/uuid)
                                        :produto/categoria {:categoria/nome "Roupas"
-                                                           :categoria/id   (model/uuid)}}]))
+                                                           :categoria/id   (model/uuid)}}] "20.216.222.12"))
 
 ; a categoria já existe... lookup ref
 (def esporte-id (:categoria/id esporte))
@@ -48,12 +48,12 @@
                                        :produto/categoria [:categoria/id esporte-id]}]))
 
 (pprint (db/todos-os-produtos (d/db conn)))
-(pprint (db/todos-os-nomes-de-produtos-e-categorias (d/db conn)))
+(pprint (db/todos-os-produtos-mais-caros (d/db conn)))
+(pprint (db/todos-os-produtos-mais-baratos (d/db conn)))
+(pprint (db/todos-os-produtos-do-ip (d/db conn) "200.216.222.125"))
+(pprint (db/todos-os-produtos-do-ip (d/db conn) "20.216.222.12"))
+(pprint (db/todos-os-produtos-do-ip (d/db conn) "210.216.222.125"))
 
-
-(pprint (db/resumo-dos-produtos (d/db conn)))
-(pprint (db/resumo-dos-produtos-por-categoria (d/db conn)))
-
-(db/apaga-banco!)
+;(db/apaga-banco!)
 
 
