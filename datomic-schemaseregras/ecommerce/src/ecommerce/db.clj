@@ -99,8 +99,18 @@
 (defn datomic-para-entidade [entidades]
   (walk/prewalk dissoc-db-id entidades))
 
-(s/defn um-produto :- model/Produto [db produto-id :- java.util.UUID]
-  (datomic-para-entidade (d/pull db '[*] [:produto/id produto-id])))
+(s/defn um-produto :- (s/maybe model/Produto) [db produto-id :- java.util.UUID]
+  (let [resultado (d/pull db '[* {:produto/categoria [*]}] [:produto/id produto-id])
+        produto (datomic-para-entidade resultado)]
+    (if (:produto/id produto)
+      produto
+      nil)))
+
+(s/defn um-produto! :- model/Produto [db produto-id :- java.util.UUID]
+  (let [produto (um-produto db produto-id)]
+    (when (nil? produto)
+      (throw (ex-info "Não encontrei uma entidade" {:type :errors/not-found, :id produto-id})))
+    produto))
 
 (s/defn todas-as-categorias :- [model/Categoria] [db]
   (datomic-para-entidade (d/q '[:find [(pull ?categoria [*]) ...]
