@@ -67,43 +67,6 @@
 (defn cria-schema! [conn]
   (d/transact conn schema))
 
-;(defn todos-os-produtos [db]
-;  (d/q '[:find (pull ?entidade [:produto/nome :produto/preco :produto/slug])
-;         :where [?entidade :produto/nome]] db))
-
-(defn todos-os-produtos-por-slug
-  [db slug]
-  (d/q '[:find ?entidade
-         :in $ ?slug-a-ser-buscado
-         :where [?entidade :produto/slug ?slug-a-ser-buscado]] db slug))
-
-(defn todos-os-slugs [db]
-  (d/q '[:find ?slug
-         :where [_ :produto/slug ?slug]] db))
-
-(defn todos-os-produtos-por-preco [db preco-minimo-requisitado]
-  (d/q '[:find ?nome, ?preco
-         :in $, ?preco-minimo
-         :keys produto/nome, produto/preco
-         :where [?id :produto/preco ?preco]
-         [(> ?preco ?preco-minimo)]
-         [?id :produto/nome ?nome]] db, preco-minimo-requisitado))
-
-
-(defn todos-os-produtos-por-palavra-chave
-  [db palavra-chave-buscada]
-  (d/q '[:find (pull ?produto [*])
-         :in $ ?palavra-chave
-         :where [?produto :produto/palavra-chave ?palavra-chave]]
-       db palavra-chave-buscada))
-
-
-(defn um-produto-por-dbid [db db-id]
-  (d/pull db '[*] db-id))
-
-(defn um-produto [db produto-id]
-  (d/pull db '[*] [:produto/id produto-id]))
-
 (defn db-adds-de-atribuicao-de-categorias
   [produtos categoria]
   (reduce (fn [db-adds produto] (conj db-adds [:db/add
@@ -117,8 +80,7 @@
   (let [a-transacionar (db-adds-de-atribuicao-de-categorias produtos categoria)]
     (d/transact conn a-transacionar)))
 
-
-(s/defn adiciona-produtos!
+(s/defn adiciona-ou-altera-produtos!
   ([conn produtos :- [model/Produto]]
    (d/transact conn produtos))
   ([conn produtos :- [model/Produto] ip]
@@ -129,73 +91,6 @@
   [conn categorias :- [model/Categoria]]
   (d/transact conn categorias))
 
-(defn todos-os-nomes-de-produtos-e-categorias [db]
-  (d/q '[:find ?nome-do-produto ?nome-da-categoria
-         :keys produto categoria
-         :where [?produto :produto/nome ?nome-do-produto]
-         [?produto :produto/categoria ?categoria]
-         [?categoria :categoria/nome ?nome-da-categoria]] db))
-
-; exemplo com forward navigation
-(defn todos-os-produtos-da-categoria
-  [db nome-da-categoria]
-  (d/q '[:find (pull ?produto [:produto/nome :produto/slug {:produto/categoria [:categoria/nome]}])
-         :in $ ?nome
-         :where [?categoria :categoria/nome ?nome]
-         [?produto :produto/categoria ?categoria]] db nome-da-categoria))
-
-; exemplo com backward navigation
-(defn todos-os-produtos-da-categoria
-  [db nome-da-categoria]
-  (d/q '[:find (pull ?categoria [:categoria/nome {:produto/_categoria [:produto/nome :produto/slug]}])
-         :in $ ?nome
-         :where [?categoria :categoria/nome ?nome]] db nome-da-categoria))
-
-(defn resumo-dos-produtos [db]
-  (d/q '[:find (min ?preco) (max ?preco) (count ?preco) (sum ?preco)
-         :keys minimo maximo quantidade preco-total
-         :with ?produto
-         :where [?produto :produto/preco ?preco]] db))
-
-(defn resumo-dos-produtos-por-categoria [db]
-  (d/q '[:find ?nome (min ?preco) (max ?preco) (count ?preco) (sum ?preco)
-         :keys categoria minimo maximo quantidade preco-total
-         :with ?produto
-         :where [?produto :produto/preco ?preco]
-         [?produto :produto/categoria ?categoria]
-         [?categoria :categoria/nome ?nome]] db))
-
-; variação que faz duas queries soltas
-;(defn todos-os-produtos-mais-caros [db]
-;  (let [preco-mais-alto (ffirst (d/q '[:find (max ?preco)
-;                                       :where [_ :produto/preco ?preco]]
-;                                     db))]
-;    (d/q '[:find (pull ?produto [*])
-;           :in $ ?preco
-;           :where [?produto :produto/preco ?preco]] db preco-mais-alto)))
-
-; queremos fazer as duas queries de uma vez só
-(defn todos-os-produtos-mais-caros [db]
-  (d/q '[:find (pull ?produto [*])
-         :where [(q '[:find (max ?preco)
-                      :where [_ :produto/preco ?preco]]
-                    $) [[?preco]]]
-         [?produto :produto/preco ?preco]] db))
-
-(defn todos-os-produtos-mais-baratos [db]
-  (d/q '[:find (pull ?produto [*])
-         :where [(q '[:find (min ?preco)
-                      :where [_ :produto/preco ?preco]]
-                    $) [[?preco]]]
-         [?produto :produto/preco ?preco]] db))
-
-(defn todos-os-produtos-do-ip [db ip]
-  (d/q '[:find (pull ?produto [*])
-         :in $ ?ip-buscado
-         :where [?transacao :tx-data/ip ?ip-buscado]
-         [?produto :produto/id _ ?transacao]]
-       db ip))
-
 (defn dissoc-db-id [entidade]
   (if (map? entidade)
     (dissoc entidade :db/id)
@@ -203,6 +98,9 @@
 
 (defn datomic-para-entidade [entidades]
   (walk/prewalk dissoc-db-id entidades))
+
+(s/defn um-produto :- model/Produto [db produto-id :- java.util.UUID]
+  (datomic-para-entidade (d/pull db '[*] [:produto/id produto-id])))
 
 (s/defn todas-as-categorias :- [model/Categoria] [db]
   (datomic-para-entidade (d/q '[:find [(pull ?categoria [*]) ...]
@@ -222,7 +120,7 @@
   ;(def calculadora {:produto/nome "Calculadora com 4 operações"})
   (def celular-barato (model/novo-produto (model/uuid) "Celular Barato" "/celular-barato" 0.1M))
   (def xadrez (model/novo-produto (model/uuid) "Tabuleiro de xadrez" "/tabuleiro-de-xadrez" 30M))
-  (pprint @(adiciona-produtos! conn [computador, celular, celular-barato, xadrez] "200.216.222.125"))
+  (pprint @(adiciona-ou-altera-produtos! conn [computador, celular, celular-barato, xadrez] "200.216.222.125"))
 
   (atribui-categorias! conn [computador, celular, celular-barato] eletronicos)
   (atribui-categorias! conn [xadrez] esporte))
