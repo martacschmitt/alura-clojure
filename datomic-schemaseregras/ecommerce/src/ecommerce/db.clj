@@ -51,6 +51,9 @@
              {:db/ident       :produto/categoria
               :db/valueType   :db.type/ref
               :db/cardinality :db.cardinality/one}
+             {:db/ident       :produto/estoque
+              :db/valueType   :db.type/long
+              :db/cardinality :db.cardinality/one}
 
              {:db/ident       :categoria/nome
               :db/valueType   :db.type/string
@@ -125,12 +128,29 @@
   (def esporte (model/nova-categoria "Esportes"))
   (pprint @(adiciona-categorias! conn [eletronicos, esporte]))
 
-  (def computador (model/novo-produto (model/uuid) "Computador Novo" "/computador-novo" 2500.10M))
+  (def computador (model/novo-produto (model/uuid) "Computador Novo" "/computador-novo" 2500.10M 10))
   (def celular (model/novo-produto (model/uuid) "Celular Caro" "/celular" 8888.88M))
   ;(def calculadora {:produto/nome "Calculadora com 4 operações"})
   (def celular-barato (model/novo-produto (model/uuid) "Celular Barato" "/celular-barato" 0.1M))
-  (def xadrez (model/novo-produto (model/uuid) "Tabuleiro de xadrez" "/tabuleiro-de-xadrez" 30M))
+  (def xadrez (model/novo-produto (model/uuid) "Tabuleiro de xadrez" "/tabuleiro-de-xadrez" 30M 5))
   (pprint @(adiciona-ou-altera-produtos! conn [computador, celular, celular-barato, xadrez] "200.216.222.125"))
 
   (atribui-categorias! conn [computador, celular, celular-barato] eletronicos)
   (atribui-categorias! conn [xadrez] esporte))
+
+(s/defn todos-os-produtos-com-estoque :- [model/Produto] [db]
+  (datomic-para-entidade (d/q '[:find [(pull ?produto [* {:produto/categoria [*]}]) ...]
+                                :where [?produto :produto/estoque ?estoque]
+                                       [(> ?estoque 0)]] db)))
+
+(s/defn um-produto-com-estoque :- (s/maybe model/Produto) [db produto-id :- java.util.UUID]
+  (let [query '[:find (pull ?produto [* {:produto/categoria [*]}]) .
+                :in $ ?id
+                :where [?produto :produto/id ?id]
+                [?produto :produto/estoque ?estoque]
+                [(> ?estoque 0)]]
+        resultado (d/q query db produto-id)
+        produto (datomic-para-entidade resultado)]
+    (if (:produto/id produto)
+      produto
+      nil)))
