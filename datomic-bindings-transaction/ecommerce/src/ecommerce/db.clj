@@ -152,6 +152,9 @@
     [(pode-vender? ?produto)
      (estoque ?produto ?estoque)
      [(> ?estoque 0)]]
+    [(produto-na-categoria ?produto ?nome-da-categoria)
+     [?categoria :categoria/nome ?nome-da-categoria]
+     [?produto :produto/categoria ?categoria]]
     ])
 
 (s/defn todos-os-produtos-vendaveis :- [model/Produto] [db]
@@ -169,3 +172,17 @@
     (if (:produto/id produto)
       produto
       nil)))
+
+(s/defn todos-os-produtos-nas-categorias :- [model/Produto]
+  [db, categorias :- [s/Str]]
+  (datomic-para-entidade (d/q '[:find [(pull ?produto [* {:produto/categoria [*]}]) ...]
+                                :in $ % [?nome-da-categoria ...]
+                                :where (produto-na-categoria ?produto ?nome-da-categoria)] db, regras, categorias)))
+
+(s/defn todos-os-produtos-nas-categorias-e-digital :- [model/Produto]
+  [db, categorias :- [s/Str], digital? :- s/Bool]
+  (datomic-para-entidade (d/q '[:find [(pull ?produto [* {:produto/categoria [*]}]) ...]
+                                :in $ % [?nome-da-categoria ...] ?eh-digital?
+                                :where (produto-na-categoria ?produto ?nome-na-categoria)
+                                       [?produto :produto/digital ?eh-digital?]]
+                              db, regras, categorias, digital?)))

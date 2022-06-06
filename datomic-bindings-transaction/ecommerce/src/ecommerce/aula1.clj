@@ -13,15 +13,14 @@
 
 (db/cria-dados-de-exemplo conn)
 
-(pprint (db/todos-os-produtos-vendaveis (d/db conn)))
+(pprint (db/todos-os-produtos (d/db conn)))
 
-(def produtos (db/todos-os-produtos (d/db conn)))
+(pprint (db/todos-os-produtos-nas-categorias (d/db conn) ["Eletrônicos", "Alimentação"]))
+(pprint (db/todos-os-produtos-nas-categorias (d/db conn) ["Eletrônicos", "Esportes"]))
+(pprint (db/todos-os-produtos-nas-categorias (d/db conn) ["Esportes"]))
+(pprint (db/todos-os-produtos-nas-categorias (d/db conn) []))
+(pprint (db/todos-os-produtos-nas-categorias (d/db conn) ["Alimentação"]))
 
-(defn verifica-se-pode-vender [produto]
-  (println "Analisando um produto")
-  (pprint (:produto/estoque produto))
-  (pprint (:produto/digital produto))
-  (pprint (db/um-produto-vendavel (d/db conn) (:produto/id produto))))
-
-(map verifica-se-pode-vender produtos)
+(pprint (db/todos-os-produtos-nas-categorias-e-digital (d/db conn) ["Eletrônicos"] true))
+(pprint (db/todos-os-produtos-nas-categorias-e-digital (d/db conn) ["Eletrônicos"] false))
 
