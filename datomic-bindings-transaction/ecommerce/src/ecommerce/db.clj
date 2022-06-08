@@ -3,7 +3,10 @@
   (:require [datomic.api :as d]
             [ecommerce.model :as model]
             [schema.core :as s]
-            [clojure.walk :as walk]))
+            [clojure.walk :as walk]
+            [clojure.set :as cset]
+            [clojure.core :as c])
+  (:import (java.util UUID)))
 
 (def db-uri "datomic:dev://localhost:4334/ecommerce")
 
@@ -105,14 +108,14 @@
 (defn datomic-para-entidade [entidades]
   (walk/prewalk dissoc-db-id entidades))
 
-(s/defn um-produto :- (s/maybe model/Produto) [db produto-id :- java.util.UUID]
+(s/defn um-produto :- (s/maybe model/Produto) [db produto-id :- UUID]
   (let [resultado (d/pull db '[* {:produto/categoria [*]}] [:produto/id produto-id])
         produto (datomic-para-entidade resultado)]
     (if (:produto/id produto)
       produto
       nil)))
 
-(s/defn um-produto! :- model/Produto [db produto-id :- java.util.UUID]
+(s/defn um-produto! :- model/Produto [db produto-id :- UUID]
   (let [produto (um-produto db produto-id)]
     (when (nil? produto)
       (throw (ex-info "Não encontrei uma entidade" {:type :errors/not-found, :id produto-id})))
@@ -162,11 +165,11 @@
                                 :in $ %
                                 :where (pode-vender? ?produto)] db regras)))
 
-(s/defn um-produto-vendavel :- (s/maybe model/Produto) [db produto-id :- java.util.UUID]
+(s/defn um-produto-vendavel :- (s/maybe model/Produto) [db produto-id :- UUID]
   (let [query '[:find (pull ?produto [* {:produto/categoria [*]}]) .
                 :in $ % ?id
                 :where [?produto :produto/id ?id]
-                       (pode-vender? ?produto)]
+                (pode-vender? ?produto)]
         resultado (d/q query db regras produto-id)
         produto (datomic-para-entidade resultado)]
     (if (:produto/id produto)
@@ -184,5 +187,33 @@
   (datomic-para-entidade (d/q '[:find [(pull ?produto [* {:produto/categoria [*]}]) ...]
                                 :in $ % [?nome-da-categoria ...] ?eh-digital?
                                 :where (produto-na-categoria ?produto ?nome-na-categoria)
-                                       [?produto :produto/digital ?eh-digital?]]
+                                [?produto :produto/digital ?eh-digital?]]
                               db, regras, categorias, digital?)))
+
+;(s/defn atualiza-preco [conn produto-id :- UUID
+;                        preco-antigo :- BigDecimal
+;                        preco-novo :- BigDecimal]
+;  (if (= preco-antigo (:produto/preco (d/pull conn [*] (:produto/id produto-id))))
+;    ; não garante atomicidade
+;    (d/transact conn [{:produto/id produto-id :produto/preco preco-novo}])
+;    (throw (ex-info "Valor foi alterado entre leitura e escrita" {:kind :errors/transaction-validation-error}))))
+
+(s/defn atualiza-preco!
+  [conn produto-id :- UUID
+   preco-antigo :- BigDecimal
+   preco-novo :- BigDecimal]
+  (d/transact conn [[:db/cas [:produto/id produto-id] :produto/preco preco-antigo preco-novo]]))
+
+
+(s/defn atualiza-produto!
+  [conn
+   antigo :- model/Produto
+   a-atualizar :- model/Produto]
+  (let [produto-id (:produto/id antigo)
+        atributos (cset/intersection (set (keys antigo)) (set (keys a-atualizar)))
+        atributos (disj atributos :produto/id)
+        txs (map
+              (fn [atributo]
+                [:db/cas [:produto/id produto-id] atributo (get antigo atributo) (get a-atualizar atributo)])
+              atributos)]
+    (d/transact conn txs)))
