@@ -60,6 +60,21 @@
              {:db/ident       :produto/digital
               :db/valueType   :db.type/boolean
               :db/cardinality :db.cardinality/one}
+             {:db/ident       :produto/variacao
+              :db/isComponent true
+              :db/valueType   :db.type/ref
+              :db/cardinality :db.cardinality/many}
+
+             {:db/ident       :variacao/id
+              :db/valueType   :db.type/uuid
+              :db/cardinality :db.cardinality/one
+              :db/unique      :db.unique/identity}
+             {:db/ident       :variacao/nome
+              :db/valueType   :db.type/string
+              :db/cardinality :db.cardinality/one}
+             {:db/ident       :variacao/preco
+              :db/valueType   :db.type/bigdec
+              :db/cardinality :db.cardinality/one}
 
              {:db/ident       :categoria/nome
               :db/valueType   :db.type/string
@@ -140,7 +155,7 @@
   (def celular-barato (model/novo-produto (model/uuid) "Celular Barato" "/celular-barato" 0.1M))
   (def xadrez (model/novo-produto (model/uuid) "Tabuleiro de xadrez" "/tabuleiro-de-xadrez" 30M 5))
   (def jogo (assoc (model/novo-produto (model/uuid) "Jogo online" "/jogo-online" 20M) :produto/digital true))
-  (pprint @(adiciona-ou-altera-produtos! conn [computador, celular, celular-barato, xadrez, jogo] "200.216.222.125"))
+  (adiciona-ou-altera-produtos! conn [computador, celular, celular-barato, xadrez, jogo] "200.216.222.125")
 
   (atribui-categorias! conn [computador, celular, celular-barato, jogo] eletronicos)
   (atribui-categorias! conn [xadrez] esporte))
@@ -217,3 +232,25 @@
                 [:db/cas [:produto/id produto-id] atributo (get antigo atributo) (get a-atualizar atributo)])
               atributos)]
     (d/transact conn txs)))
+
+(s/defn adiciona-variacao!
+  [conn
+   produto-id :- UUID
+   variacao :- s/Str
+   preco :- BigDecimal]
+  (d/transact conn [{:db/id          "variacao-temporaria"
+                     :variacao/nome  variacao
+                     :variacao/preco preco
+                     :variacao/id    (model/uuid)}
+                    {:produto/id       produto-id
+                     :produto/variacao "variacao-temporaria"}]))
+
+(defn total-de-produtos [db]
+  (d/q '[:find [(count ?produto)]
+         :where [?produto :produto/nome]]
+       db))
+
+(s/defn remove-produto!
+  [conn
+   produto-id :- UUID]
+  (d/transact conn [[:db/retractEntity [:produto/id produto-id]]]))
