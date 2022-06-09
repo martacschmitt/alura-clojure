@@ -64,6 +64,10 @@
               :db/isComponent true
               :db/valueType   :db.type/ref
               :db/cardinality :db.cardinality/many}
+             {:db/ident       :produto/visualizacoes
+              :db/valueType   :db.type/long
+              :db/cardinality :db.cardinality/one
+              :db/noHistory   true}
 
              {:db/ident       :variacao/id
               :db/valueType   :db.type/uuid
@@ -254,3 +258,20 @@
   [conn
    produto-id :- UUID]
   (d/transact conn [[:db/retractEntity [:produto/id produto-id]]]))
+
+(s/defn visualizacoes
+  [db
+   produto-id :- UUID]
+  (or (d/q '[:find ?visualizacoes .
+             :in $ ?id
+             :where [?p :produto/id ?id]
+             [?p :produto/visualizacoes ?visualizacoes]]
+           db produto-id) 0))
+
+(s/defn visualizacao!
+  [conn
+   produto-id :- UUID]
+  (let [ate-agora (visualizacoes (d/db conn) produto-id)
+        novo-valor (inc ate-agora)]
+    (d/transact conn [{:produto/id            produto-id
+                       :produto/visualizacoes novo-valor}])))
