@@ -259,19 +259,13 @@
    produto-id :- UUID]
   (d/transact conn [[:db/retractEntity [:produto/id produto-id]]]))
 
-(s/defn visualizacoes
-  [db
-   produto-id :- UUID]
-  (or (d/q '[:find ?visualizacoes .
-             :in $ ?id
-             :where [?p :produto/id ?id]
-             [?p :produto/visualizacoes ?visualizacoes]]
-           db produto-id) 0))
+;(s/defn visualizacoes
+;  [db produto-id :- UUID]
+;  (or (d/q '[:find ?visualizacoes .
+;             :in $ ?id
+;             :where [?p :produto/id ?id]
+;             [?p :produto/visualizacoes ?visualizacoes]]
+;           db produto-id) 0))
 
-(s/defn visualizacao!
-  [conn
-   produto-id :- UUID]
-  (let [ate-agora (visualizacoes (d/db conn) produto-id)
-        novo-valor (inc ate-agora)]
-    (d/transact conn [{:produto/id            produto-id
-                       :produto/visualizacoes novo-valor}])))
+(s/defn visualizacao! [conn produto-id :- UUID]
+  (d/transact conn [[:incrementa-visualizacao produto-id]]))
