@@ -12,12 +12,20 @@
                        :venda/id         id}])
     id))
 
-(defn custo [db venda-id]
-  (d/q '[:find (sum ?preco-por-produto) .
+(defn instante-da-venda [db venda-id]
+  (d/q '[:find ?instante .
          :in $ ?id
-         :where [?venda :venda/id ?id]
-         [?venda :venda/quantidade ?quantidade]
-         [?venda :venda/produto ?produto]
-         [?produto :produto/preco ?preco]
-         [(* ?preco ?quantidade) ?preco-por-produto]]
+         :where [_ :venda/id ?id ?tx true]
+         [?tx :db/txInstant ?instante]]
        db venda-id))
+
+(defn custo [db venda-id]
+  (let [instante (instante-da-venda db venda-id)]
+    (d/q '[:find (sum ?preco-por-produto) .
+           :in $ ?id
+           :where [?venda :venda/id ?id]
+           [?venda :venda/quantidade ?quantidade]
+           [?venda :venda/produto ?produto]
+           [?produto :produto/preco ?preco]
+           [(* ?preco ?quantidade) ?preco-por-produto]]
+         (d/as-of db instante) venda-id)))
