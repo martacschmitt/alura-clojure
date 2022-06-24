@@ -23,7 +23,7 @@
       nil)))
 
 (s/defn um! :- model/Produto [db produto-id :- UUID]
-  (let [produto (um-produto db produto-id)]
+  (let [produto (um db produto-id)]
     (when (nil? produto)
       (throw (ex-info "Não encontrei uma entidade" {:type :errors/not-found, :id produto-id})))
     produto))

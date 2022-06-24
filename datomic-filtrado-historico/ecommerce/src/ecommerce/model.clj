@@ -1,17 +1,18 @@
 (ns ecommerce.model
-  (:require [schema.core :as s]))
+  (:require [schema.core :as s])
+  (:import (java.util UUID)))
 
 (def Categoria
-  {:categoria/id   java.util.UUID
+  {:categoria/id   UUID
    :categoria/nome s/Str})
 
 (def Variacao
-  {:variacao/id    java.util.UUID
+  {:variacao/id    UUID
    :variacao/nome  s/Str
    :variacao/preco BigDecimal})
 
 (def Produto
-  {:produto/id                             java.util.UUID
+  {:produto/id                             UUID
    (s/optional-key :produto/nome)          s/Str
    (s/optional-key :produto/slug)          s/Str
    (s/optional-key :produto/preco)         BigDecimal
@@ -22,7 +23,12 @@
    (s/optional-key :produto/variacao)      [Variacao]
    (s/optional-key :produto/visualizacoes) s/Int})
 
-(defn uuid [] (java.util.UUID/randomUUID))
+(def Venda
+  {:venda/id                          UUID
+   (s/optional-key :venda/produto)    Produto
+   (s/optional-key :venda/quantidade) s/Int})
+
+(defn uuid [] (UUID/randomUUID))
 
 (defn novo-produto
   ([nome slug preco]
