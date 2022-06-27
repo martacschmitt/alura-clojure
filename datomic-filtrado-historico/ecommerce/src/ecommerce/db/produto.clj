@@ -30,7 +30,7 @@
 
 (s/defn todos :- [model/Produto] [db]
   (db.entidade/datomic-para-entidade (d/q '[:find [(pull ?entidade [* {:produto/categoria [*]}]) ...]
-                                :where [?entidade :produto/nome]] db)))
+                                            :where [?entidade :produto/nome]] db)))
 
 (def regras
   '[
@@ -49,8 +49,8 @@
 
 (s/defn todos-os-vendaveis :- [model/Produto] [db]
   (db.entidade/datomic-para-entidade (d/q '[:find [(pull ?produto [* {:produto/categoria [*]}]) ...]
-                                :in $ %
-                                :where (pode-vender? ?produto)] db regras)))
+                                            :in $ %
+                                            :where (pode-vender? ?produto)] db regras)))
 
 (s/defn um-vendavel :- (s/maybe model/Produto) [db produto-id :- UUID]
   (let [query '[:find (pull ?produto [* {:produto/categoria [*]}]) .
@@ -66,16 +66,16 @@
 (s/defn todos-nas-categorias :- [model/Produto]
   [db, categorias :- [s/Str]]
   (db.entidade/datomic-para-entidade (d/q '[:find [(pull ?produto [* {:produto/categoria [*]}]) ...]
-                                :in $ % [?nome-da-categoria ...]
-                                :where (produto-na-categoria ?produto ?nome-da-categoria)] db, regras, categorias)))
+                                            :in $ % [?nome-da-categoria ...]
+                                            :where (produto-na-categoria ?produto ?nome-da-categoria)] db, regras, categorias)))
 
 (s/defn todos-nas-categorias-e-digital :- [model/Produto]
   [db, categorias :- [s/Str], digital? :- s/Bool]
   (db.entidade/datomic-para-entidade (d/q '[:find [(pull ?produto [* {:produto/categoria [*]}]) ...]
-                                :in $ % [?nome-da-categoria ...] ?eh-digital?
-                                :where (produto-na-categoria ?produto ?nome-na-categoria)
-                                [?produto :produto/digital ?eh-digital?]]
-                              db, regras, categorias, digital?)))
+                                            :in $ % [?nome-da-categoria ...] ?eh-digital?
+                                            :where (produto-na-categoria ?produto ?nome-na-categoria)
+                                            [?produto :produto/digital ?eh-digital?]]
+                                          db, regras, categorias, digital?)))
 
 (s/defn atualiza-preco!
   [conn produto-id :- UUID
@@ -105,3 +105,12 @@
   [conn
    produto-id :- UUID]
   (d/transact conn [[:db/retractEntity [:produto/id produto-id]]]))
+
+(defn historico-de-precos [db produto-id]
+  (->> (d/q '[:find ?instante ?preco
+              :in $ ?id
+              :where [?produto :produto/id ?id]
+              [?produto :produto/preco ?preco ?tx true]
+              [?tx :db/txInstant ?instante]]
+            (d/history db) produto-id)
+       (sort-by first)))
