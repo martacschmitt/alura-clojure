@@ -114,3 +114,15 @@
               [?tx :db/txInstant ?instante]]
             (d/history db) produto-id)
        (sort-by first)))
+
+(defn busca-mais-caro [db]
+  (d/q '[:find (max ?preco) .
+         :where [_ :produto/preco ?preco]]
+       db))
+
+(defn busca-mais-caro-que [db preco-minimo]
+  (d/q '[:find ?preco
+         :in $ ?minimo
+         :where [_ :produto/preco ?preco]
+         [(>= ?preco ?minimo)]]
+       db preco-minimo))
