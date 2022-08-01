@@ -26,6 +26,7 @@
              {:db/ident       :produto/preco
               :db/valueType   :db.type/bigdec
               :db/cardinality :db.cardinality/one
+              :db/index       true
               :db/doc         "O preço de um produto com precisão monetária"}
              {:db/ident       :produto/palavra-chave
               :db/valueType   :db.type/string

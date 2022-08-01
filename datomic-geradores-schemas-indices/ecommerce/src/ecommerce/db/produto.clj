@@ -126,3 +126,19 @@
          :where [_ :produto/preco ?preco]
          [(>= ?preco ?minimo)]]
        db preco-minimo))
+
+(defn busca-por-preco [db preco-mais-caro]
+  (db.entidade/datomic-para-entidade
+    (d/q '[:find (pull ?produto [*])
+           :in $ ?buscado
+           :where [?produto :produto/preco ?buscado]]
+         db preco-mais-caro)))
+
+(defn busca-por-preco-e-nome [db preco nome]
+  (db.entidade/datomic-para-entidade
+    (d/q '[:find (pull ?produto [*])
+           :in $ ?preco-exato ?trecho
+           :where [?produto :produto/preco ?preco-exato]
+           [?produto :produto/nome ?nome]
+           [(.contains ?nome ?trecho)]]
+         db preco nome)))
